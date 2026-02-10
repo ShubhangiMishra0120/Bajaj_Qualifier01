@@ -104,7 +104,11 @@ def bfhl():
 
         # ---------- AI ----------
         if key == "AI":
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={os.getenv('GEMINI_API_KEY')}"
+            api_key = os.getenv('GEMINI_API_KEY')
+            if not api_key:
+                raise ValueError("GEMINI_API_KEY not set in environment")
+            
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemma-3-12b-it:generateContent?key={api_key}"
             payload = {
                 "contents": [
                     {"parts": [{"text": value}]}
@@ -113,6 +117,12 @@ def bfhl():
 
             response = requests.post(url, json=payload)
             result = response.json()
+
+            if "error" in result:
+                raise ValueError(f"API Error: {result['error'].get('message', 'Unknown error')}")
+            
+            if "candidates" not in result:
+                raise ValueError("Invalid API response: no candidates found")
 
             answer = result["candidates"][0]["content"]["parts"][0]["text"].split()[0]
 
@@ -138,3 +148,4 @@ def bfhl():
 # ---------- Run App ----------
 if __name__ == "__main__":
     app.run(debug=True)
+    
